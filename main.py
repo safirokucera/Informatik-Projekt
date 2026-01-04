@@ -1,10 +1,5 @@
 import csv
 import sqlite3
-from pathlib import Path
-
-db = Path("db/sales.sqlite")
-if db.exists():
-    db.unlink()
 
 def load_table(file_name, fields):
     table = []
