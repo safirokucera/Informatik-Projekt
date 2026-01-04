@@ -1,6 +1,10 @@
 import csv
 import sqlite3
+from pathlib import Path
 
+db = Path("db/sales.sqlite")
+if db.exists():
+    db.unlink()
 
 def load_table(file_name, fields):
     table = []
@@ -84,6 +88,25 @@ input("waiting before removing client 1002...")
 cursor.execute("delete from customers where ID = 1002;")
 connection.commit()
 
+yn = input("Do you want to see orders to a specific address? (y/n) ").lower()
+if yn == "y":
+    address_input = input("Enter part of the address: ")
+    query = """select t.ID as transaction_id, c.address as customer_address, p.name as product_name, t.quantity, t.order_date
+    from transactions t
+    join customers c on t.customer = c.ID
+    join products p on t.product = p.ID
+    where c.address like ?;"""
+    result = cursor.execute(query, (f"%{address_input}%",))
+    print(f"Orders for addresses containing '{address_input}':")
+    for row in result.fetchall():
+        print("    Transaction ID:", row['transaction_id'], 
+              "| Address:", row['customer_address'], 
+              "| Product:", row['product_name'], 
+              "| Quantity:", row['quantity'], 
+              "| Order Date:", row['order_date'])
+    
+input("waiting before running data analysis...")
+
 # =================================================================
 print("\nCustomers age 83, living in Atlanta:")
 query = """select * from customers
@@ -91,7 +114,7 @@ where age = 83 and address like '%Atlanta%';"""
 
 result = cursor.execute(query)
 for row in result.fetchall():
-    print("    ", row['ID'], row['address'], row['age'])
+    print(f"    Customer ID: {row['ID']}, Address: {row['address']}, Age: {row['age']}")
 
 # =================================================================
 print("\nNumber of transactions per product:")
